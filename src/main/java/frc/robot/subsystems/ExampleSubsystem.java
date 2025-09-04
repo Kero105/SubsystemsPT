@@ -7,43 +7,74 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class ExampleSubsystem extends SubsystemBase implements Reportable {
-  /** Creates a new ExampleSubsystem. */
-  public ExampleSubsystem() {}
+public class FlyWheel extends SubsystemBase implements Reportable {
+  private final TalonFX motor;
 
-  /**
-   * Example command factory method.
-   *
-   * @return a command
-   */
-  public Command exampleMethodCommand() {
-    // Inline construction of command goes here.
-    // Subsystem::RunOnce implicitly requires `this` subsystem.
-    return runOnce(
-        () -> {
-          /* one-time action goes here */
-        });
+  private double desiredSpeed = 0.0;
+  private boolean enabled = true;
+  private TalonFXConfigurator motorConfigurator;
+  private VelocityVoltage velocityRequest;
+  private final NeutralOut neutralRequest = new NeutralOut();
+
+  private NeutralModeValue neutralMode = NeutralModeValue.Brake;
+
+  public FlyWheel(){
+    flywheelMotor = new TalonFX(deviceId:0);
+    velocityRequest = new VelocityVoltage(speed:0);
+    
+    flywheelMotor.setSpeed(newvalue:0.0);
+
+    motorConfigurator = flywheelMotor.getConfigurator();
+
+    setMotorConfigs();
+
+    velocityRequest(newSlot:0);
+    zeroEncoder();
+    CommandScheduler.getInstance().registerSubsystem(this);
   }
 
-  /**
-   * An example method querying a boolean state of the subsystem (for example, a digital sensor).
-   *
-   * @return value of some boolean subsystem state, such as a digital sensor.
-   */
-  public boolean exampleCondition() {
-    // Query some boolean state, such as a digital sensor.
-    return false;
+  public void setMotorConfigs(){
+    TalonFXConfiguration motorConfigs = new TalonFXConfiguration();
+
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    if (!enabled) {
+      return;
+    }
+
+    VelocityVoltage.Velocity = desiredSpeed;
+
+    flywheelMotor.setControl(velocityRequest);
   }
 
-  @Override
-  public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
+
+  public void setEnabled(boolean enabled){
+    this.enabled = enabled;
+    if(enabled){
+      flywheelMotor.setControl(followRequest);
+    } else{
+      stopMotion();
+    }
   }
+
+  public void setTargetSpeed(double speed){
+    desiredSpeed = speed;
+  }
+
+  public double getSpeed(){
+    return flywheelMotor.getSpeed().getValueAsDouble();
+  }
+
+  public double getTargetSpeed(){
+    return desiredSpeed;
+  }
+
+  public boolean atSpeed(){
+    return flywheelMotor.getSpeed().getValueAsDouble() > desiredSpeed;
+  }
+
   public void reportToSmartDashboard(LOG_LEVEL priority){
   
   }
