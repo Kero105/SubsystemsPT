@@ -4,11 +4,19 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class FlyWheel extends SubsystemBase implements Reportable {
-  private final TalonFX motor;
+public class ExampleSubsystem extends SubsystemBase implements Reportable {
+  private final TalonFX flywheelMotor;
 
   private double desiredSpeed = 0.0;
   private boolean enabled = true;
@@ -18,18 +26,16 @@ public class FlyWheel extends SubsystemBase implements Reportable {
 
   private NeutralModeValue neutralMode = NeutralModeValue.Brake;
 
-  public FlyWheel(){
-    flywheelMotor = new TalonFX(deviceId:0);
-    velocityRequest = new VelocityVoltage(speed:0);
-    
-    flywheelMotor.setSpeed(newvalue:0.0);
+  public ExampleSubsystem(){
+    flywheelMotor = new TalonFX(0);
+    velocityRequest = new VelocityVoltage(0);
 
     motorConfigurator = flywheelMotor.getConfigurator();
 
     setMotorConfigs();
 
-    velocityRequest(newSlot:0);
-    zeroEncoder();
+    velocityRequest = new VelocityVoltage(0);
+
     CommandScheduler.getInstance().registerSubsystem(this);
   }
 
@@ -44,7 +50,7 @@ public class FlyWheel extends SubsystemBase implements Reportable {
       return;
     }
 
-    VelocityVoltage.Velocity = desiredSpeed;
+    velocityRequest.Velocity = desiredSpeed;
 
     flywheelMotor.setControl(velocityRequest);
   }
@@ -52,11 +58,9 @@ public class FlyWheel extends SubsystemBase implements Reportable {
 
   public void setEnabled(boolean enabled){
     this.enabled = enabled;
-    if(enabled){
-      flywheelMotor.setControl(followRequest);
-    } else{
-      stopMotion();
-    }
+    if(!enabled){
+      flywheelMotor.setControl(neutralRequest);
+    } 
   }
 
   public void setTargetSpeed(double speed){
@@ -64,7 +68,7 @@ public class FlyWheel extends SubsystemBase implements Reportable {
   }
 
   public double getSpeed(){
-    return flywheelMotor.getSpeed().getValueAsDouble();
+    return flywheelMotor.getVelocity().getValueAsDouble();
   }
 
   public double getTargetSpeed(){
@@ -72,7 +76,7 @@ public class FlyWheel extends SubsystemBase implements Reportable {
   }
 
   public boolean atSpeed(){
-    return flywheelMotor.getSpeed().getValueAsDouble() > desiredSpeed;
+    return flywheelMotor.getVelocity().getValueAsDouble() > desiredSpeed;
   }
 
   public void reportToSmartDashboard(LOG_LEVEL priority){
@@ -82,13 +86,13 @@ public class FlyWheel extends SubsystemBase implements Reportable {
   @Override
   public void initShuffleboard(LOG_LEVEL priority){
     switch (priority){
-      case OFF;
+      case OFF:
         break;
-      case ALL;
+      case ALL:
 
-      case MEDIUM;
+      case MEDIUM:
       
-      case MINIMAL;
+      case MINIMAL:
     }
 
   }
